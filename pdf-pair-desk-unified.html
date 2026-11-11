@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDF Pair Desk | PDF比較・注釈・画像化</title>
+<style>
+:root{color-scheme:light;--ink:#202733;--muted:#647084;--line:#d9dee7;--paper:#fff;--bg:#edf1f6;--accent:#3759c7;--accent2:#e9eeff;--danger:#b42318;--shadow:0 4px 16px rgba(28,39,60,.09)}
+*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;color:var(--ink);background:var(--bg)}body{display:flex;flex-direction:column;min-width:320px}
+header{display:flex;align-items:center;gap:8px;padding:4px 12px;background:#182230;color:white;box-shadow:0 2px 8px #0002;z-index:4;min-height:32px}
+.brand-mark{display:grid;place-items:center;width:24px;height:24px;border-radius:6px;background:#c8d5ff;color:#213b91;font-weight:900;font-size:11px;flex:none}.brand h1{font-size:14px;line-height:18px;margin:0;letter-spacing:.2px}.brand p{display:none}.header-note{margin-left:auto;color:#c5cfdd;font-size:10px;line-height:14px;text-align:right;white-space:nowrap}
+.toolbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:5px 10px;background:#fff;border-bottom:1px solid var(--line);z-index:3;box-shadow:0 2px 5px #24324b08}
+.tool-group{display:flex;align-items:center;gap:5px;padding-right:10px;margin-right:2px;border-right:1px solid #e5e9f0}.tool-group:last-child{border-right:0}.group-label{font-size:11px;color:var(--muted);margin-right:2px;white-space:nowrap}
+button,.file-button{appearance:none;border:1px solid #d1d8e3;background:#fff;color:#253043;border-radius:7px;padding:5px 7px;font-size:12px;font-weight:650;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:4px;transition:background .12s,border-color .12s,transform .12s}
+button:hover,.file-button:hover{background:#f3f6fb;border-color:#a9b7cd}button:active,.file-button:active{transform:translateY(1px)}button:disabled{opacity:.4;cursor:not-allowed;transform:none}.tool-btn{width:34px;min-width:34px;height:30px;padding:4px}.tool-btn.active{background:var(--accent2);color:#2545a6;border-color:#7d95e9;box-shadow:inset 0 0 0 1px #7d95e9}.tool-symbol{font-size:19px;line-height:20px}.primary{background:var(--accent);color:white;border-color:var(--accent)}.primary:hover{background:#2947ad;border-color:#2947ad}.danger{color:var(--danger)}.color-palette{display:flex;align-items:center;gap:4px}.color-swatch{width:20px;height:20px;padding:0;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #c7cfdd;min-width:20px}.color-swatch.active{box-shadow:0 0 0 2px #26364d;transform:scale(1.04)}.color-swatch:hover{filter:brightness(.94)}input[type=range]{width:72px;accent-color:var(--accent)}.size-value{width:12px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums}.status{margin-left:auto;min-width:120px;font-size:11px;color:var(--muted);text-align:right}
+main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;padding:12px;flex:1;min-height:0}
+.pane{display:flex;flex-direction:column;min-width:0;min-height:0;background:#f8f9fc;border:1px solid #d8dee8;border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+.pane-head{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border-bottom:1px solid var(--line);min-height:60px}.pane-letter{display:grid;place-items:center;width:29px;height:29px;border-radius:8px;background:#e8edf7;color:#2b3d62;font-weight:800;font-size:12px;flex:none}.pane-meta{min-width:0;flex:1}.pane-meta h2{font-size:13px;margin:0 0 3px}.filename{color:var(--muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px}.page-count{font-size:11px;color:var(--muted);white-space:nowrap}.pane-head button{padding:7px 9px;font-size:11px}
+.pages{flex:1;min-height:0;overflow:auto;position:relative;padding:16px 10px 32px;scrollbar-gutter:stable}.empty-state{min-height:100%;display:flex;align-items:center;justify-content:center;padding:22px}.drop-box{width:min(360px,100%);border:2px dashed #c5cede;border-radius:15px;background:#fff;padding:29px 20px;text-align:center;transition:border-color .15s,background .15s}.drop-box.over{border-color:var(--accent);background:#f1f4ff}.drop-icon{font-size:32px;margin-bottom:9px;color:#687b9a}.drop-box h3{font-size:15px;margin:0 0 7px}.drop-box p{font-size:12px;line-height:1.7;color:var(--muted);margin:0 0 16px}.page-block{margin:0 auto 24px;max-width:100%;}.page-caption{display:flex;justify-content:space-between;align-items:center;gap:8px;max-width:100%;padding:0 3px 6px;color:#69758a;font-size:11px}.page-paper{position:relative;margin:0 auto;background:#fff;box-shadow:0 3px 14px #1423441c;line-height:0;outline:1px solid #d8dee6;overflow:hidden}.page-paper canvas{position:absolute;inset:0;display:block}.pdf-canvas{z-index:1}.annotation-canvas{z-index:2;touch-action:none;cursor:crosshair}.pane.active-pane{border-color:#8296df;box-shadow:0 0 0 2px #9aaceb55,var(--shadow)}.pane.active-pane .pane-letter{background:#dfe7ff;color:#2d4db1}.busy{padding:14px;color:#68758b;text-align:center;font-size:12px}.footer{padding:7px 14px;border-top:1px solid #dce2eb;background:#f9fafc;color:#6a7587;font-size:11px;display:flex;gap:10px;justify-content:space-between}.kbd{display:inline-block;padding:1px 4px;border:1px solid #cfd5df;border-radius:4px;background:white;font-size:10px}
+.modal-backdrop{position:fixed;inset:0;background:#17203366;z-index:20;display:none;align-items:center;justify-content:center;padding:20px}.modal-backdrop.open{display:flex}.modal{background:white;width:min(470px,100%);border-radius:13px;padding:20px;box-shadow:0 18px 60px #0b17374d}.modal h2{font-size:17px;margin:0 0 5px}.modal p{font-size:12px;color:var(--muted);margin:0 0 13px}.modal label{display:block;font-size:12px;font-weight:700;margin:12px 0 6px}.modal textarea{width:100%;min-height:110px;resize:vertical;border:1px solid #cbd4e2;border-radius:8px;padding:10px;font:14px/1.6 system-ui,"Noto Sans JP",sans-serif}.modal input[type=number]{width:100px;padding:7px;border:1px solid #cbd4e2;border-radius:7px}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.object-modal{width:min(620px,100%);max-height:min(82vh,760px);display:flex;flex-direction:column}.object-summary{font-size:12px;color:var(--muted);margin-bottom:10px}.object-list{overflow:auto;min-height:80px;max-height:52vh;border:1px solid #e0e5ed;border-radius:9px;background:#fbfcfe}.object-empty{padding:24px 12px;text-align:center;font-size:12px;color:var(--muted)}.object-row{display:flex;align-items:center;gap:8px;padding:7px;border-bottom:1px solid #e7ebf2}.object-row:last-child{border-bottom:0}.object-row-target{flex:1;min-width:0;display:flex;align-items:center;justify-content:flex-start;gap:9px;text-align:left;border:0;background:transparent;padding:5px;border-radius:6px}.object-row-target:hover{background:#edf2ff}.object-swatch{width:13px;height:13px;border-radius:50%;flex:none;border:1px solid #0002}.object-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:600}.object-page{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}.object-delete{min-width:32px;width:32px;height:30px;padding:2px;font-size:17px}.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.image-modal{width:min(1240px,100%);height:min(92vh,980px);max-height:92vh;display:flex;flex-direction:column;padding:0;overflow:hidden}.image-head{display:flex;align-items:flex-start;gap:10px;padding:14px 18px 12px;border-bottom:1px solid var(--line)}.image-head h2{font-size:17px;margin:0 0 3px}.image-target{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:min(860px,70vw)}.image-body{flex:1;min-height:0;display:grid;grid-template-columns:276px minmax(0,1fr)}.image-controls{padding:14px 16px;overflow:auto;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:15px}.ctl-label{font-size:12px;font-weight:700;margin-bottom:6px}.ctl-note{font-size:11px;color:var(--muted);line-height:1.6;margin:0}.panel-switch{display:grid;grid-template-columns:1fr 1fr;gap:6px}.panel-switch button.active{background:var(--accent2);color:#2545a6;border-color:#7d95e9;box-shadow:inset 0 0 0 1px #7d95e9}.crop-row{display:grid;grid-template-columns:28px minmax(0,1fr) 38px;align-items:center;gap:8px;margin-top:6px;font-size:12px}.crop-row input[type=range]{width:100%}.crop-row .crop-val{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}#imgProgress{width:100%;height:14px;margin-top:6px}#imgStatus{font-size:12px;color:var(--muted);min-height:16px}.check-row{display:flex;align-items:flex-start;gap:8px;font-size:12px;font-weight:650;line-height:1.5;cursor:pointer}.check-row input{margin-top:2px}.check-row small{display:block;font-weight:400;color:var(--muted)}#imgScaleSel{width:100%;padding:7px;border:1px solid #cbd4e2;border-radius:7px;font-size:12px;background:#fff}.sel-actions{display:flex;gap:6px}.sel-actions button{flex:1}.image-pages{overflow:auto;padding:14px;background:#f2f4f8;min-height:0}.img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(430px,100%),1fr));gap:12px}.img-card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;box-shadow:var(--shadow)}.img-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px}.img-card-head label{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:650;cursor:pointer}.img-card-size{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}#imageModal .imageArea{position:relative;line-height:0}#imageModal .imageArea img{display:block;width:100%}#imageModal .maskTop,#imageModal .maskBottom,#imageModal .maskLeft,#imageModal .maskRight{position:absolute;background:rgba(0,0,0,.45);pointer-events:none}#imageModal .maskTop{top:0;left:0;right:0}#imageModal .maskBottom{bottom:0;left:0;right:0}#imageModal .maskLeft{top:0;bottom:0;left:0}#imageModal .maskRight{top:0;bottom:0;right:0}#imageModal .lineTop,#imageModal .lineBottom,#imageModal .lineLeft,#imageModal .lineRight{position:absolute;background:#2563eb;pointer-events:none}#imageModal .lineTop,#imageModal .lineBottom{left:0;right:0;height:2px}#imageModal .lineLeft,#imageModal .lineRight{top:0;bottom:0;width:2px}.img-empty{border:2px dashed #c5cede;border-radius:12px;background:#fff;color:var(--muted);font-size:13px;text-align:center;padding:36px 18px;line-height:1.7}
+@media(max-width:800px){.image-body{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}.image-controls{border-right:0;border-bottom:1px solid var(--line);max-height:48%;gap:10px}.image-head h2{font-size:15px}}
+
+@media(max-width:800px){header{padding:4px 8px}.header-note{display:none}.toolbar{gap:4px;padding:5px}.tool-group{gap:4px;padding-right:5px}.tool-btn{width:32px;min-width:32px;height:29px;padding:3px}main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(280px,1fr) minmax(280px,1fr);gap:9px;padding:9px}.pane-head{min-height:54px;padding:8px}.pages{padding:10px 5px 22px}.status{width:100%;text-align:left;margin-left:0}.footer{align-items:flex-start;flex-direction:column;gap:3px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand-mark">PDF</div>
+  <div class="brand"><h1>PDF Pair Desk</h1><p>2つのPDFを並べて確認・注釈</p></div>
+  <div class="header-note">PDFはブラウザー内で処理（サーバー送信なし）</div>
+</header>
+<nav class="toolbar" aria-label="注釈ツール">
+  <div class="tool-group" role="group" aria-label="ツール">
+    <button class="tool-btn active" data-tool="select" title="選択・色変更・削除" aria-label="選択"><span class="tool-symbol">↖</span></button>
+    <button class="tool-btn" data-tool="pen" title="手書き" aria-label="手書き"><span class="tool-symbol">✎</span></button>
+    <button class="tool-btn" data-tool="rect" title="四角形" aria-label="四角形"><span class="tool-symbol">□</span></button>
+    <button class="tool-btn" data-tool="arrow" title="矢印" aria-label="矢印"><span class="tool-symbol">↗</span></button>
+    <button class="tool-btn" data-tool="text" title="テキスト" aria-label="テキスト"><span class="tool-symbol">T</span></button>
+  </div>
+  <div class="tool-group" role="group" aria-label="色と線幅">
+    <div class="color-palette" role="group" aria-label="色">
+      <button class="color-swatch active" data-color="#e23b31" style="background:#e23b31" title="赤" aria-label="赤"></button>
+      <button class="color-swatch" data-color="#2563eb" style="background:#2563eb" title="青" aria-label="青"></button>
+      <button class="color-swatch" data-color="#202733" style="background:#202733" title="黒" aria-label="黒"></button>
+      <button class="color-swatch" data-color="#16824a" style="background:#16824a" title="緑" aria-label="緑"></button>
+      <button class="color-swatch" data-color="#f59e0b" style="background:#f59e0b" title="オレンジ" aria-label="オレンジ"></button>
+      <button class="color-swatch" data-color="#8b5cf6" style="background:#8b5cf6" title="紫" aria-label="紫"></button>
+      <button class="color-swatch" data-color="#eab308" style="background:#eab308" title="黄" aria-label="黄"></button>
+      <button class="color-swatch" data-color="#64748b" style="background:#64748b" title="グレー" aria-label="グレー"></button>
+    </div>
+    <span class="group-label" title="線幅">⌁</span><input id="lineWidth" type="range" min="1" max="5" step="1" value="3" aria-label="線幅（1～5px）" title="線幅：1～5px"><span class="size-value" id="lineWidthValue">3</span><span class="group-label">px</span>
+  </div>
+  <div class="tool-group" role="group" aria-label="編集">
+    <button id="objectsBtn" title="注釈オブジェクト一覧" aria-label="注釈オブジェクト一覧" disabled>☷</button>
+    <button id="undoBtn" title="直前の変更を取り消し" aria-label="取り消し" disabled>↶</button>
+    <button id="redoBtn" title="取り消した変更をやり直し" aria-label="やり直し" disabled>↷</button>
+    <button id="deleteBtn" class="danger" title="選択削除" aria-label="選択削除" disabled>⌫</button>
+    <button id="clearBtn" class="danger" title="ページ内の注釈をすべて削除" aria-label="ページ消去" disabled>⌧</button>
+  </div>
+  <div class="tool-group" role="group" aria-label="保存">
+    <button id="saveLeftBtn" class="primary" title="左のPDFを編集データ付きで保存" aria-label="左のPDFを編集データ付きで保存" disabled>⇙</button>
+    <button id="saveRightBtn" class="primary" title="右のPDFを編集データ付きで保存" aria-label="右のPDFを編集データ付きで保存" disabled>⇘</button>
+  </div>
+  <div class="tool-group" role="group" aria-label="画像化">
+    <button id="imageBtn" title="読み込み済みのPDFを画像化（トリミング・ページ選択・ZIP保存）" aria-label="画像化" disabled>🖼 画像化</button>
+  </div>
+  <div class="status" id="status" role="status" aria-live="polite">PDFを読み込んでください。</div>
+</nav>
+<main>
+  <section class="pane" id="leftPane" data-key="left" aria-label="左のPDF">
+    <div class="pane-head">
+      <div class="pane-letter">A</div><div class="pane-meta"><h2>左のPDF</h2><div class="filename" id="leftFilename">ファイル未選択</div></div><div class="page-count" id="leftCount"></div>
+      <button class="file-button" id="leftOpenBtn">PDFを開く</button><input class="sr-only" id="leftFile" type="file" accept="application/pdf,.pdf">
+    </div>
+    <div class="pages" id="leftPages"><div class="empty-state"><div class="drop-box" id="leftDrop"><div class="drop-icon">▤</div><h3>左側のPDFを開く</h3><p>PDFファイルを選ぶか、この領域にドラッグ＆ドロップしてください。<br>比較元の資料や問題文などに。</p><button class="primary" data-open="left">PDFを選択</button></div></div></div>
+  </section>
+  <section class="pane" id="rightPane" data-key="right" aria-label="右のPDF">
+    <div class="pane-head">
+      <div class="pane-letter">B</div><div class="pane-meta"><h2>右のPDF</h2><div class="filename" id="rightFilename">ファイル未選択</div></div><div class="page-count" id="rightCount"></div>
+      <button class="file-button" id="rightOpenBtn">PDFを開く</button><input class="sr-only" id="rightFile" type="file" accept="application/pdf,.pdf">
+    </div>
+    <div class="pages" id="rightPages"><div class="empty-state"><div class="drop-box" id="rightDrop"><div class="drop-icon">▤</div><h3>右側のPDFを開く</h3><p>もう一方のPDFを読み込むと、左右で見比べられます。<br>改訂前後の差分確認などに。</p><button class="primary" data-open="right">PDFを選択</button></div></div></div>
+  </section>
+</main>
+<div class="footer"><span title="他のPDF編集ソフトで再保存すると、埋め込み編集データが失われる場合があります。オブジェクトを再編集するには、このWebアプリで保存PDFを開いてください。">使い方：注釈は☷から個別編集。PDF保存時に元PDFと編集データを埋め込み、後日このアプリで再開できます。画像化はツールバーの「🖼 画像化」から開けます。</span><span><span class="kbd">Delete</span> 選択削除　 <span class="kbd">Ctrl+Z</span> 取り消し　 <span class="kbd">Ctrl+Y</span> やり直し</span></div>
+<div class="modal-backdrop" id="textModal" role="dialog" aria-modal="true" aria-labelledby="textModalTitle">
+  <div class="modal"><h2 id="textModalTitle">テキストを挿入</h2><p>挿入位置に文字を配置します。改行も使えます。</p><label for="textValue">文字</label><textarea id="textValue" placeholder="挿入する文字を入力"></textarea><label for="fontSize">文字サイズ（PDF上のポイント）</label><input id="fontSize" type="number" min="6" max="96" step="1" value="16"><div class="modal-actions"><button id="cancelTextBtn">キャンセル</button><button id="insertTextBtn" class="primary">挿入</button></div></div>
+</div>
+<div class="modal-backdrop" id="objectModal" role="dialog" aria-modal="true" aria-labelledby="objectModalTitle">
+  <div class="modal object-modal">
+    <h2 id="objectModalTitle">注釈オブジェクト</h2>
+    <p class="object-summary">オブジェクトは個別管理です。Cだけ削除しても、後から描いたD以降は残ります。行を押すとその位置へ移動し、色変更もできます。</p>
+    <div id="objectList" class="object-list" role="list"></div>
+    <div id="objectEmpty" class="object-empty" hidden>このPDFには注釈がありません。</div>
+    <div class="modal-actions"><button id="closeObjectModalBtn">閉じる</button></div>
+  </div>
+</div>
+<div class="modal-backdrop" id="imageModal" role="dialog" aria-modal="true" aria-labelledby="imageModalTitle">
+  <div class="modal image-modal">
+    <div class="image-head">
+      <div style="flex:1;min-width:0">
+        <h2 id="imageModalTitle">PDFを画像化</h2>
+        <div class="image-target" id="imgTargetName">対象PDF：未選択</div>
+      </div>
+      <button id="imgCloseBtn" type="button">閉じる ✕</button>
+    </div>
+    <div class="image-body">
+      <div class="image-controls">
+        <div class="ctl">
+          <div class="ctl-label">対象PDF</div>
+          <div class="panel-switch" role="group" aria-label="画像化するPDF">
+            <button id="imgPanelLeft" type="button">左 A</button>
+            <button id="imgPanelRight" type="button">右 B</button>
+          </div>
+        </div>
+        <div class="ctl">
+          <div class="ctl-label">進行状況</div>
+          <div id="imgStatus" role="status" aria-live="polite">待機中</div>
+          <progress id="imgProgress" value="0" max="100"></progress>
+        </div>
+        <div class="ctl">
+          <div class="ctl-label">トリミング（%）</div>
+          <div class="crop-row"><span>上</span><input type="range" id="imgCropTop" min="0" max="40" value="0" aria-label="上トリミング"><span class="crop-val" id="imgCropTopVal">0%</span></div>
+          <div class="crop-row"><span>下</span><input type="range" id="imgCropBottom" min="0" max="40" value="0" aria-label="下トリミング"><span class="crop-val" id="imgCropBottomVal">0%</span></div>
+          <div class="crop-row"><span>左</span><input type="range" id="imgCropLeft" min="0" max="40" value="0" aria-label="左トリミング"><span class="crop-val" id="imgCropLeftVal">0%</span></div>
+          <div class="crop-row"><span>右</span><input type="range" id="imgCropRight" min="0" max="40" value="0" aria-label="右トリミング"><span class="crop-val" id="imgCropRightVal">0%</span></div>
+        </div>
+        <div class="ctl">
+          <div class="ctl-label">描画倍率</div>
+          <select id="imgScaleSel" aria-label="描画倍率">
+            <option value="2">2倍（軽量）</option>
+            <option value="3">3倍</option>
+            <option value="4" selected>4倍（元の画像化アプリと同じ）</option>
+          </select>
+        </div>
+        <div class="ctl">
+          <label class="check-row" for="imgAnnoChk"><input type="checkbox" id="imgAnnoChk"><span>注釈を含める<small>オフの場合は元のページのみ（元の画像化アプリと同じ）</small></span></label>
+        </div>
+        <div class="ctl">
+          <div class="ctl-label">ページ選択 <span id="imgSelCount" style="font-weight:400;color:var(--muted)"></span></div>
+          <div class="sel-actions">
+            <button id="imgSelectAllBtn" type="button">全選択</button>
+            <button id="imgClearAllBtn" type="button">全解除</button>
+          </div>
+        </div>
+        <button id="imgDownloadBtn" type="button" class="primary" disabled>選択画像をZIPダウンロード</button>
+        <p class="ctl-note">画像はこのブラウザー内で生成されます（サーバー送信なし）。トリミングはプレビュー上のマスク位置でダウンロード時に切り抜きます。</p>
+      </div>
+      <div class="image-pages" id="imgPages">
+        <div class="img-empty" id="imgEmpty">PDFを読み込むと、ここにページ画像が表示されます。</div>
+        <div class="img-grid" id="imgGrid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+if (window.pdfjsLib) { pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"; }
+(() => {
+  'use strict';
+  const $ = (id) => document.getElementById(id);
+  const keys = ['left','right'];
+  const EDITABLE_STATE_ATTACHMENT = 'PDF_PAIR_DESK_EDITABLE_V1.json';
+  const SOURCE_PDF_ATTACHMENT = 'PDF_PAIR_DESK_SOURCE_V1.pdf';
+  const PROJECT_FORMAT = 'PDF_PAIR_DESK_EDITABLE_PROJECT';
+  const panels = {};
+  for (const key of keys) panels[key] = {
+    key, pdfDoc:null, bytes:null, filename:'', sourceFilename:'', pageCount:0, pagesContainer:$(`${key}Pages`),
+    pageViews:new Map(), annotations:new Map(), history:[], redoHistory:[], nextObjectNumber:1, observer:null, generation:0, activePage:1, selected:null,
+    loading:false
+  };
+  let activePanel = 'left';
+  let activeTool = 'select';
+  let currentColor = '#e23b31';
+  let currentDraw = null;
+  let pendingText = null;
+  let isRenderingResize = false;
+  const status = (s) => { $('status').textContent = s; };
+  const annoFor = (panel, pageNum) => { if(!panel.annotations.has(pageNum)) panel.annotations.set(pageNum, []); return panel.annotations.get(pageNum); };
+  const uid = () => 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  function selectPanel(key) {
+    activePanel = key;
+    for (const k of keys) $(k+'Pane').classList.toggle('active-pane', k===key);
+    updateEditButtons();
+  }
+  function updateEditButtons() {
+    const p = panels[activePanel];
+    $('deleteBtn').disabled = !(p.selected && findAnnotation(p,p.selected.pageNum,p.selected.id));
+    $('objectsBtn').disabled = !p.pdfDoc;
+    $('undoBtn').disabled = !p.history.length;
+    $('redoBtn').disabled = !p.redoHistory.length;
+    $('clearBtn').disabled = !(p.annotations.get(p.activePage)||[]).length;
+    if($('objectModal').classList.contains('open')) refreshObjectList();
+  }
+  function findAnnotation(panel, pageNum, id) { return (panel.annotations.get(pageNum)||[]).find(a=>a.id===id); }
+  function cloneAnnotations(items) { return items.map(a=>JSON.parse(JSON.stringify(a))); }
+  function rememberChange(panel,pageNum) {
+    panel.history.push({pageNum,annotations:cloneAnnotations(panel.annotations.get(pageNum)||[])});
+    if(panel.history.length>200)panel.history.shift();
+    panel.redoHistory.length=0;
+  }
+  function restoreAnnotations(panel,pageNum,items) {
+    if(items.length)panel.annotations.set(pageNum,cloneAnnotations(items));
+    else panel.annotations.delete(pageNum);
+  }
+  function annotationTypeLabel(a) {
+    return ({pen:'手書き',rect:'四角形',arrow:'矢印',text:'テキスト'})[a.type]||'注釈';
+  }
+  function openObjectManager() {
+    if(!panels[activePanel].pdfDoc)return;
+    refreshObjectList();$('objectModal').classList.add('open');
+  }
+  function refreshObjectList() {
+    const list=$('objectList'),empty=$('objectEmpty');
+    if(!list||!empty)return;
+    const key=activePanel,p=panels[key];list.replaceChildren();
+    const all=[];
+    [...p.annotations.keys()].sort((a,b)=>a-b).forEach(pageNum=>{
+      const arr=p.annotations.get(pageNum)||[];
+      arr.forEach((a,index)=>all.push({pageNum,a,index:index+1}));
+    });
+    $('objectModalTitle').textContent=`注釈オブジェクト（${all.length}）`;
+    empty.hidden=all.length!==0;list.hidden=all.length===0;
+    for(const item of all){
+      const row=document.createElement('div');row.className='object-row';row.setAttribute('role','listitem');
+      const target=document.createElement('button');target.type='button';target.className='object-row-target';target.title='選択して該当ページへ移動';
+      const swatch=document.createElement('span');swatch.className='object-swatch';swatch.style.background=item.a.color||'#e23b31';
+      const label=document.createElement('span');label.className='object-label';
+      const extra=item.a.type==='text'&&String(item.a.text||'').trim()?`「${String(item.a.text).replace(/\s+/g,' ').slice(0,22)}${String(item.a.text).length>22?'…':''}」`:'';
+      label.textContent=`${annotationTypeLabel(item.a)} #${item.a.objectNumber??item.index}${extra?` · ${extra}`:''}`;
+      const page=document.createElement('span');page.className='object-page';page.textContent=`P.${item.pageNum}`;
+      target.append(swatch,label,page);
+      target.addEventListener('click',()=>{selectAnnotation(key,item.pageNum,item.a.id);$('objectModal').classList.remove('open');});
+      const remove=document.createElement('button');remove.type='button';remove.className='danger object-delete';remove.textContent='×';remove.title='このオブジェクトだけ削除';remove.setAttribute('aria-label',`${annotationTypeLabel(item.a)}を個別削除`);
+      remove.addEventListener('click',()=>deleteAnnotation(key,item.pageNum,item.a.id));
+      row.append(target,remove);list.append(row);
+    }
+  }
+  function selectAnnotation(key,pageNum,id) {
+    const p=panels[key];if(!findAnnotation(p,pageNum,id))return;
+    selectPanel(key);p.activePage=pageNum;p.selected={pageNum,id};
+    const v=p.pageViews.get(pageNum);
+    if(v){v.paper.parentElement.scrollIntoView({block:'center',behavior:'smooth'});if(v.rendered)drawOverlay(key,pageNum);else ensureRendered(key,v);}
+    updateEditButtons();status(`${pageNum}ページの注釈を選択しました。`);
+  }
+  function deleteAnnotation(key,pageNum,id) {
+    const p=panels[key],arr=p.annotations.get(pageNum)||[],i=arr.findIndex(a=>a.id===id);
+    if(i<0)return;
+    rememberChange(p,pageNum);arr.splice(i,1);p.activePage=pageNum;
+    if(p.selected&&p.selected.pageNum===pageNum&&p.selected.id===id)p.selected=null;
+    selectPanel(key);drawOverlay(key,pageNum);updateEditButtons();
+    status(`${pageNum}ページの注釈を1つ削除しました。他の注釈は保持されています。`);
+  }
+  function setTool(tool) {
+    activeTool = tool;
+    document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active', b.dataset.tool===tool));
+    for (const p of Object.values(panels)) p.pageViews.forEach(v=>{ if(v.overlay) v.overlay.style.cursor = tool==='select'?'default':tool==='text'?'text':'crosshair'; });
+  }
+  document.querySelectorAll('[data-tool]').forEach(b=>b.addEventListener('click',()=>setTool(b.dataset.tool)));
+  $('lineWidth').addEventListener('input',()=> $('lineWidthValue').textContent=$('lineWidth').value);
+  function syncColorSwatches(){document.querySelectorAll('[data-color]').forEach(b=>b.classList.toggle('active',b.dataset.color.toLowerCase()===currentColor.toLowerCase()));}
+  document.querySelectorAll('[data-color]').forEach(b=>b.addEventListener('click',()=>{
+    currentColor=b.dataset.color;syncColorSwatches();
+    const p=panels[activePanel];
+    if(p.selected){const a=findAnnotation(p,p.selected.pageNum,p.selected.id);if(a&&a.color!==currentColor){rememberChange(p,p.selected.pageNum);a.color=currentColor;const v=p.pageViews.get(p.selected.pageNum);if(v)drawOverlay(activePanel,p.selected.pageNum);updateEditButtons();}}
+  }));
+  for(const key of keys){
+    $(`${key}OpenBtn`).addEventListener('click',()=> $(`${key}File`).click());
+    $(`${key}File`).addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];if(file)loadPdf(key,file);e.target.value='';});
+    document.querySelectorAll(`[data-open="${key}"]`).forEach(b=>b.addEventListener('click',()=> $(`${key}File`).click()));
+    const pane=$(key+'Pane');
+    pane.addEventListener('pointerdown',()=>selectPanel(key),{passive:true});
+    pane.addEventListener('dragover',e=>{e.preventDefault();const box=$(key+'Drop');if(box)box.classList.add('over');});
+    pane.addEventListener('dragleave',e=>{if(!pane.contains(e.relatedTarget)){const box=$(key+'Drop');if(box)box.classList.remove('over');}});
+    pane.addEventListener('drop',e=>{e.preventDefault();const box=$(key+'Drop');if(box)box.classList.remove('over');const file=[...(e.dataTransfer?.files||[])].find(f=>f.type==='application/pdf'||f.name.toLowerCase().endsWith('.pdf'));if(file)loadPdf(key,file);else status('PDFファイルをドロップしてください。');});
+  }
+  function listPdfAttachments(attachments){
+    if(!attachments)return [];
+    if(attachments instanceof Map)return [...attachments.entries()].map(([name,item])=>({name,item}));
+    return Object.entries(attachments).map(([name,item])=>({name,item}));
+  }
+  function findPdfAttachment(attachments,filename){
+    return listPdfAttachments(attachments).find(({name,item})=>name===filename||item?.filename===filename||item?.name===filename)?.item||null;
+  }
+  function bytesFromAttachment(attachment){
+    if(!attachment?.content)return null;
+    try{return new Uint8Array(attachment.content);}catch(_){return null;}
+  }
+  function beginsWithPdf(bytes){return !!bytes&&bytes.length>5&&String.fromCharCode(...bytes.slice(0,5))==='%PDF-';}
+  function restoreAnnotationMap(raw,pageCount){
+    const result=new Map();
+    if(!raw||typeof raw!=='object'||Array.isArray(raw))return result;
+    const allowedTypes=new Set(['pen','rect','arrow','text']);
+    for(const [pageKey,items] of Object.entries(raw)){
+      const pageNum=Number(pageKey);
+      if(!Number.isInteger(pageNum)||pageNum<1||pageNum>pageCount||!Array.isArray(items))continue;
+      const valid=[];
+      for(const rawItem of items.slice(0,10000)){
+        if(!rawItem||!allowedTypes.has(rawItem.type)||typeof rawItem.id!=='string')continue;
+        const a={...rawItem};
+        if(typeof a.color!=='string'||!/^#[0-9a-f]{6}$/i.test(a.color))a.color='#e23b31';
+        a.objectNumber=Number.isFinite(Number(a.objectNumber))?Math.max(1,Math.floor(Number(a.objectNumber))):valid.length+1;
+        a.strokeNorm=Number.isFinite(Number(a.strokeNorm))?Math.max(0,Math.min(.05,Number(a.strokeNorm))):0.003;
+        const coord=v=>Number.isFinite(Number(v))?Math.max(0,Math.min(1,Number(v))):null;
+        if(a.type==='pen'){
+          if(!Array.isArray(a.points)||!a.points.length)continue;
+          a.points=a.points.slice(0,100000).map(pt=>({x:coord(pt?.x),y:coord(pt?.y)}));
+          if(a.points.some(pt=>pt.x===null||pt.y===null))continue;
+        }else if(a.type==='text'){
+          a.x=coord(a.x);a.y=coord(a.y);
+          if(a.x===null||a.y===null||typeof a.text!=='string')continue;
+          a.text=a.text.slice(0,20000);
+          a.fontSizeNorm=Number.isFinite(Number(a.fontSizeNorm))?Math.max(.001,Math.min(.2,Number(a.fontSizeNorm))):.02;
+        }else{
+          a.x0=coord(a.x0);a.y0=coord(a.y0);a.x1=coord(a.x1);a.y1=coord(a.y1);
+          if([a.x0,a.y0,a.x1,a.y1].some(v=>v===null))continue;
+        }
+        valid.push(a);
+      }
+      if(valid.length)result.set(pageNum,valid);
+    }
+    return result;
+  }
+  async function loadPdf(key,file){
+    const p=panels[key];
+    if(!file || (!file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf'))){status('PDFファイルを選択してください。');return;}
+    if(!window.pdfjsLib || !window.PDFLib){status('PDFライブラリの読み込みに失敗しました。ネット接続を確認して再読み込みしてください。');return;}
+    p.loading=true;status(`${key==='left'?'左':'右'}のPDFを読み込み中…`);selectPanel(key);
+    try{
+      const inputBytes=new Uint8Array(await file.arrayBuffer());
+      let bytes=inputBytes;
+      let doc=await pdfjsLib.getDocument({data:inputBytes.slice()}).promise;
+      let restoredAnnotations=null, restoredNextObjectNumber=1, restoredSourceFilename=file.name, restoredProject=false;
+      // A saved Desk PDF contains both the editable object manifest and the clean source PDF.
+      // Restore the clean source as the canvas background so deleted/moved objects do not remain baked in.
+      try{
+        const attachments=await doc.getAttachments();
+        const stateAttachment=findPdfAttachment(attachments,EDITABLE_STATE_ATTACHMENT);
+        const stateBytes=bytesFromAttachment(stateAttachment);
+        if(stateBytes){
+          const state=JSON.parse(new TextDecoder().decode(stateBytes));
+          if(state?.format===PROJECT_FORMAT&&state.version===1){
+            const sourceAttachment=findPdfAttachment(attachments,SOURCE_PDF_ATTACHMENT);
+            const sourceBytes=bytesFromAttachment(sourceAttachment);
+            if(beginsWithPdf(sourceBytes)){
+              restoredAnnotations=restoreAnnotationMap(state.annotations,Number(state.pageCount)||doc.numPages);
+              restoredNextObjectNumber=Math.max(1,Number(state.nextObjectNumber)||1);
+              restoredSourceFilename=typeof state.sourceFilename==='string'&&state.sourceFilename?state.sourceFilename:file.name;
+              await doc.destroy();
+              bytes=sourceBytes;
+              doc=await pdfjsLib.getDocument({data:bytes.slice()}).promise;
+              // Enforce page-count bounds against the actual source PDF.
+              restoredAnnotations=restoreAnnotationMap(Object.fromEntries(restoredAnnotations),doc.numPages);
+              const maxObjectNumber=[...restoredAnnotations.values()].flat().reduce((m,a)=>Math.max(m,Number(a.objectNumber)||0),0);
+              restoredNextObjectNumber=Math.max(restoredNextObjectNumber,maxObjectNumber+1);
+              restoredProject=true;
+            }else{
+              status('編集データは見つかりましたが、元PDFデータがありません。個別削除を復元できないため、通常のPDFとして開きます。');
+            }
+          }
+        }
+      }catch(restoreErr){console.warn('PDF Pair Desk の編集データを復元できませんでした。',restoreErr);}
+      p.pdfDoc=doc;p.bytes=bytes;p.filename=file.name;p.sourceFilename=restoredSourceFilename;p.pageCount=doc.numPages;
+      p.annotations=restoredProject?(restoredAnnotations||new Map()):new Map();p.history=[];p.redoHistory=[];p.nextObjectNumber=restoredNextObjectNumber;p.selected=null;p.activePage=1;
+      $(`${key}Filename`).textContent=file.name;$(`${key}Filename`).title=file.name;$(`${key}Count`).textContent=`${doc.numPages}ページ`;
+      $(`${key}Pane`).classList.add('active-pane');
+      $(`${key}Pane`).querySelector('.pane-head h2').textContent=key==='left'?'左のPDF':'右のPDF';
+      $(`${key}Pane`).querySelectorAll('.pane-head button').forEach(b=>b.disabled=false);
+      await buildPageViews(key);
+      if(restoredProject){const n=[...p.annotations.values()].reduce((sum,arr)=>sum+arr.length,0);status(`編集データを復元しました（${n}オブジェクト）。個別編集して再保存できます。`);}
+      else status(`${key==='left'?'左':'右'}のPDFを読み込みました（${doc.numPages}ページ）。`);
+    }catch(err){console.error(err);p.pdfDoc=null;p.bytes=null;p.pageCount=0;$(`${key}Filename`).textContent='読み込みに失敗しました';$(`${key}Count`).textContent='';p.pagesContainer.innerHTML='<div class="busy">PDFを開けませんでした。破損・パスワード保護・未対応形式の可能性があります。</div>';status('PDFの読み込みに失敗しました。');}
+    finally{p.loading=false;syncSaveButtons();updateEditButtons();}
+  }
+  async function buildPageViews(key){
+    const p=panels[key];
+    p.generation++;const generation=p.generation;
+    if(p.observer){p.observer.disconnect();p.observer=null;}
+    p.pageViews.clear();p.pagesContainer.innerHTML='';
+    p.pagesContainer.scrollTop=0;
+    const widthAvail=Math.max(220,p.pagesContainer.clientWidth-42);
+    const entries=[];
+    for(let pageNum=1;pageNum<=p.pdfDoc.numPages;pageNum++){
+      const page=await p.pdfDoc.getPage(pageNum);
+      if(generation!==p.generation)return;
+      const base=page.getViewport({scale:1});
+      const scale=Math.min(widthAvail/base.width,1.35);
+      const viewport=page.getViewport({scale});
+      const w=viewport.width,h=viewport.height;
+      const block=document.createElement('div');block.className='page-block';block.dataset.page=String(pageNum);
+      const caption=document.createElement('div');caption.className='page-caption';caption.innerHTML=`<span>ページ ${pageNum} / ${p.pdfDoc.numPages}</span><span>${Math.round(base.width)} × ${Math.round(base.height)} pt</span>`;
+      const paper=document.createElement('div');paper.className='page-paper';paper.style.width=`${w}px`;paper.style.height=`${h}px`;
+      const canvas=document.createElement('canvas');canvas.className='pdf-canvas';canvas.setAttribute('aria-label',`PDF ${pageNum}ページ`);canvas.style.width=`${w}px`;canvas.style.height=`${h}px`;
+      const overlay=document.createElement('canvas');overlay.className='annotation-canvas';overlay.setAttribute('aria-label',`ページ ${pageNum} の注釈レイヤー`);overlay.style.width=`${w}px`;overlay.style.height=`${h}px`;overlay.style.cursor=activeTool==='select'?'default':activeTool==='text'?'text':'crosshair';
+      paper.append(canvas,overlay);block.append(caption,paper);p.pagesContainer.append(block);
+      const v={pageNum,page,base,viewport,scale,width:w,height:h,canvas,overlay,paper,rendered:false,rendering:false};p.pageViews.set(pageNum,v);entries.push(v);
+      overlay.addEventListener('pointerdown',e=>onOverlayDown(e,key,pageNum));
+      overlay.addEventListener('pointermove',e=>onOverlayMove(e,key,pageNum));
+      overlay.addEventListener('pointerup',e=>onOverlayUp(e,key,pageNum));
+      overlay.addEventListener('pointercancel',e=>onOverlayUp(e,key,pageNum));
+      overlay.addEventListener('pointerleave',e=>{if(currentDraw&&currentDraw.key===key&&currentDraw.pageNum===pageNum&&e.buttons===0)onOverlayUp(e,key,pageNum);});
+    }
+    if(generation!==p.generation)return;
+    if('IntersectionObserver' in window){
+      p.observer=new IntersectionObserver((items)=>{for(const item of items){if(item.isIntersecting){const v=p.pageViews.get(Number(item.target.dataset.page));if(v)renderPage(key,v);}}},{root:p.pagesContainer,rootMargin:'700px 0px'});
+      for(const v of entries)p.observer.observe(v.paper.parentElement);
+    }else{for(const v of entries)await renderPage(key,v);}
+    syncSaveButtons();
+  }
+  async function renderPage(key,v){
+    const p=panels[key];if(v.rendered||v.rendering||!p.pdfDoc)return;v.rendering=true;
+    try{
+      const dpr=Math.min(window.devicePixelRatio||1,2);
+      v.canvas.width=Math.round(v.width*dpr);v.canvas.height=Math.round(v.height*dpr);
+      const ctx=v.canvas.getContext('2d',{alpha:false});
+      await v.page.render({canvasContext:ctx,viewport:v.viewport,transform:dpr===1?null:[dpr,0,0,dpr,0,0],background:'rgb(255,255,255)'}).promise;
+      v.overlay.width=Math.round(v.width*dpr);v.overlay.height=Math.round(v.height*dpr);
+      v.rendered=true;drawOverlay(p.key,v.pageNum);
+    }catch(err){console.error(err);status('ページの描画に失敗しました。');}
+    finally{v.rendering=false;}
+  }
+  function drawOverlay(key,pageNum){
+    const p=panels[key],v=p.pageViews.get(pageNum);if(!v||!v.overlay.width)return;
+    const dpr=v.overlay.width/v.width,ctx=v.overlay.getContext('2d');ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,v.overlay.width,v.overlay.height);ctx.setTransform(dpr,0,0,dpr,0,0);
+    for(const a of p.annotations.get(pageNum)||[])drawAnnotation(ctx,a,v.width,v.height);
+    if(currentDraw&&currentDraw.key===key&&currentDraw.pageNum===pageNum)drawAnnotation(ctx,currentDraw.annotation,v.width,v.height);
+    if(p.selected&&p.selected.pageNum===pageNum){const a=findAnnotation(p,pageNum,p.selected.id);if(a)drawSelection(ctx,a,v.width,v.height);}
+  }
+  function drawAnnotation(ctx,a,w,h){
+    ctx.save();ctx.strokeStyle=a.color||'#e23b31';ctx.fillStyle=a.color||'#e23b31';ctx.lineWidth=Math.max(1,a.strokeNorm*w);ctx.lineCap='round';ctx.lineJoin='round';
+    if(a.type==='pen'){
+      if(a.points&&a.points.length){ctx.beginPath();ctx.moveTo(a.points[0].x*w,a.points[0].y*h);for(let i=1;i<a.points.length;i++)ctx.lineTo(a.points[i].x*w,a.points[i].y*h);if(a.points.length===1){ctx.lineTo(a.points[0].x*w+.1,a.points[0].y*h+.1);}ctx.stroke();}
+    }else if(a.type==='rect'){
+      const x0=a.x0*w,y0=a.y0*h,x1=a.x1*w,y1=a.y1*h;ctx.strokeRect(Math.min(x0,x1),Math.min(y0,y1),Math.abs(x1-x0),Math.abs(y1-y0));
+    }else if(a.type==='arrow'){
+      const x0=a.x0*w,y0=a.y0*h,x1=a.x1*w,y1=a.y1*h;ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();const angle=Math.atan2(y1-y0,x1-x0),head=Math.max(8,ctx.lineWidth*4.2);ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x1-head*Math.cos(angle-Math.PI/6),y1-head*Math.sin(angle-Math.PI/6));ctx.moveTo(x1,y1);ctx.lineTo(x1-head*Math.cos(angle+Math.PI/6),y1-head*Math.sin(angle+Math.PI/6));ctx.stroke();
+    }else if(a.type==='text'){
+      const fs=Math.max(6,a.fontSizeNorm*w);ctx.font=`${fs}px system-ui, -apple-system, "Noto Sans JP", sans-serif`;ctx.textBaseline='top';const lines=String(a.text||'').split('\n');lines.forEach((line,i)=>ctx.fillText(line,a.x*w,a.y*h+i*fs*1.3));
+    }
+    ctx.restore();
+  }
+  function annotationBounds(a,w,h){
+    if(a.type==='rect'||a.type==='arrow')return {x:Math.min(a.x0,a.x1)*w,y:Math.min(a.y0,a.y1)*h,w:Math.abs(a.x1-a.x0)*w,h:Math.abs(a.y1-a.y0)*h};
+    if(a.type==='pen'){const ps=a.points||[];if(!ps.length)return{x:0,y:0,w:0,h:0};const xs=ps.map(p=>p.x*w),ys=ps.map(p=>p.y*h);const x=Math.min(...xs),y=Math.min(...ys);return{x,y,w:Math.max(...xs)-x,h:Math.max(...ys)-y};}
+    const fs=Math.max(6,a.fontSizeNorm*w),lines=String(a.text||'').split('\n');const measured=Math.max(10,...lines.map(t=>t.length*fs*.65));return{x:a.x*w,y:a.y*h,w:measured,h:Math.max(fs,lines.length*fs*1.3)};
+  }
+  function drawSelection(ctx,a,w,h){const b=annotationBounds(a,w,h);ctx.save();ctx.strokeStyle='#2859d9';ctx.lineWidth=1;ctx.setLineDash([4,3]);ctx.strokeRect(b.x-4,b.y-4,Math.max(8,b.w)+8,Math.max(8,b.h)+8);ctx.setLineDash([]);ctx.fillStyle='#2859d9';for(const [x,y] of [[b.x-4,b.y-4],[b.x+b.w+4,b.y-4],[b.x-4,b.y+b.h+4],[b.x+b.w+4,b.y+b.h+4]]){ctx.fillRect(x-2,y-2,4,4);}ctx.restore();}
+  function pointerPos(e,overlay){const r=overlay.getBoundingClientRect();return{x:Math.max(0,Math.min(r.width,e.clientX-r.left)),y:Math.max(0,Math.min(r.height,e.clientY-r.top)),w:r.width,h:r.height};}
+  function onOverlayDown(e,key,pageNum){
+    e.preventDefault();selectPanel(key);const p=panels[key],v=p.pageViews.get(pageNum);if(!v)return;ensureRendered(key,v);p.activePage=pageNum;
+    const pos=pointerPos(e,v.overlay),nx=pos.x/pos.w,ny=pos.y/pos.h;
+    if(activeTool==='select'){
+      const hit=hitTest(p,pageNum,pos.x,pos.y,pos.w,pos.h);p.selected=hit?{pageNum,id:hit.id}:null;if(hit&&hit.color){currentColor=hit.color;syncColorSwatches();}drawOverlay(key,pageNum);updateEditButtons();return;
+    }
+    p.selected=null;
+    if(activeTool==='text'){pendingText={key,pageNum,x:nx,y:ny};$('textValue').value='';$('fontSize').value='16';$('textModal').classList.add('open');$('textValue').focus();updateEditButtons();return;}
+    const strokeNorm=Number($('lineWidth').value)/pos.w;
+    let annotation;
+    if(activeTool==='pen')annotation={id:uid(),objectNumber:p.nextObjectNumber++,type:'pen',points:[{x:nx,y:ny}],color:currentColor,strokeNorm};
+    else annotation={id:uid(),objectNumber:p.nextObjectNumber++,type:activeTool,x0:nx,y0:ny,x1:nx,y1:ny,color:currentColor,strokeNorm};
+    currentDraw={key,pageNum,annotation};try{v.overlay.setPointerCapture(e.pointerId);}catch(_){}drawOverlay(key,pageNum);
+  }
+  function ensureRendered(key,v){if(!v.rendered)renderPage(key,v);}
+  function onOverlayMove(e,key,pageNum){if(!currentDraw||currentDraw.key!==key||currentDraw.pageNum!==pageNum)return;const p=panels[key],v=p.pageViews.get(pageNum);if(!v)return;const pos=pointerPos(e,v.overlay),nx=pos.x/pos.w,ny=pos.y/pos.h,a=currentDraw.annotation;if(a.type==='pen')a.points.push({x:nx,y:ny});else{a.x1=nx;a.y1=ny;}drawOverlay(key,pageNum);}
+  function onOverlayUp(e,key,pageNum){if(!currentDraw||currentDraw.key!==key||currentDraw.pageNum!==pageNum)return;const p=panels[key],a=currentDraw.annotation;currentDraw=null;rememberChange(p,pageNum);annoFor(p,pageNum).push(a);p.activePage=pageNum;p.selected={pageNum,id:a.id};drawOverlay(key,pageNum);updateEditButtons();status('注釈を追加しました。');}
+  function hitTest(p,pageNum,x,y,w,h){const arr=p.annotations.get(pageNum)||[];for(let i=arr.length-1;i>=0;i--){const a=arr[i],threshold=10+Math.max(0,a.strokeNorm*w);if(a.type==='text'){const b=annotationBounds(a,w,h);if(x>=b.x-5&&x<=b.x+b.w+5&&y>=b.y-5&&y<=b.y+b.h+5)return a;}
+      else if(a.type==='rect'){const b=annotationBounds(a,w,h);if(x>=b.x-threshold&&x<=b.x+b.w+threshold&&y>=b.y-threshold&&y<=b.y+b.h+threshold)return a;}
+      else if(a.type==='arrow'){if(distanceSegment(x,y,a.x0*w,a.y0*h,a.x1*w,a.y1*h)<threshold+5)return a;}
+      else if(a.type==='pen'){const ps=a.points||[];if(ps.length===1&&Math.hypot(x-ps[0].x*w,y-ps[0].y*h)<threshold)return a;for(let j=1;j<ps.length;j++)if(distanceSegment(x,y,ps[j-1].x*w,ps[j-1].y*h,ps[j].x*w,ps[j].y*h)<threshold)return a;}
+    }return null;}
+  function distanceSegment(px,py,x1,y1,x2,y2){const dx=x2-x1,dy=y2-y1,l=dx*dx+dy*dy;if(!l)return Math.hypot(px-x1,py-y1);const t=Math.max(0,Math.min(1,((px-x1)*dx+(py-y1)*dy)/l));return Math.hypot(px-(x1+t*dx),py-(y1+t*dy));}
+  function closeTextModal(){ $('textModal').classList.remove('open');pendingText=null; }
+  $('cancelTextBtn').addEventListener('click',closeTextModal);
+  $('textModal').addEventListener('click',e=>{if(e.target===$('textModal'))closeTextModal();});
+  $('insertTextBtn').addEventListener('click',()=>{
+    const text=$('textValue').value;if(!text.trim()){status('挿入する文字を入力してください。');return;}
+    const pending=pendingText;if(!pending)return;const p=panels[pending.key],v=p.pageViews.get(pending.pageNum);if(!v)return;
+    const fs=Math.max(6,Math.min(96,Number($('fontSize').value)||16));const a={id:uid(),objectNumber:p.nextObjectNumber++,type:'text',x:pending.x,y:pending.y,text,color:currentColor,strokeNorm:0,fontSizeNorm:fs/v.base.width};rememberChange(p,pending.pageNum);annoFor(p,pending.pageNum).push(a);p.activePage=pending.pageNum;p.selected={pageNum:pending.pageNum,id:a.id};selectPanel(pending.key);closeTextModal();drawOverlay(p.key,pending.pageNum);updateEditButtons();status('テキストを挿入しました。');
+  });
+  $('objectsBtn').addEventListener('click',openObjectManager);
+  $('closeObjectModalBtn').addEventListener('click',()=>$('objectModal').classList.remove('open'));
+  $('objectModal').addEventListener('click',e=>{if(e.target===$('objectModal'))$('objectModal').classList.remove('open');});
+  $('undoBtn').addEventListener('click',()=>{
+    const p=panels[activePanel],entry=p.history.pop();if(!entry)return;
+    p.redoHistory.push({pageNum:entry.pageNum,annotations:cloneAnnotations(p.annotations.get(entry.pageNum)||[])});
+    restoreAnnotations(p,entry.pageNum,entry.annotations);p.activePage=entry.pageNum;p.selected=null;
+    drawOverlay(activePanel,entry.pageNum);updateEditButtons();status('直前の変更を取り消しました。');
+  });
+  $('redoBtn').addEventListener('click',()=>{
+    const p=panels[activePanel],entry=p.redoHistory.pop();if(!entry)return;
+    p.history.push({pageNum:entry.pageNum,annotations:cloneAnnotations(p.annotations.get(entry.pageNum)||[])});
+    restoreAnnotations(p,entry.pageNum,entry.annotations);p.activePage=entry.pageNum;p.selected=null;
+    drawOverlay(activePanel,entry.pageNum);updateEditButtons();status('取り消した変更をやり直しました。');
+  });
+  $('deleteBtn').addEventListener('click',()=>{const p=panels[activePanel];if(!p.selected)return;deleteAnnotation(activePanel,p.selected.pageNum,p.selected.id);});
+  $('clearBtn').addEventListener('click',()=>{const p=panels[activePanel],arr=p.annotations.get(p.activePage)||[];if(!arr.length)return;if(!confirm(`ページ ${p.activePage} の注釈をすべて削除しますか？`))return;rememberChange(p,p.activePage);arr.splice(0,arr.length);p.selected=null;drawOverlay(activePanel,p.activePage);updateEditButtons();status('このページの注釈を消去しました。');});
+  document.addEventListener('keydown',e=>{if($('imageModal').classList.contains('open')){if(e.key==='Escape')closeImageModal();return;}if($('textModal').classList.contains('open')){if(e.key==='Escape')closeTextModal();if((e.ctrlKey||e.metaKey)&&e.key==='Enter')$('insertTextBtn').click();return;}if($('objectModal').classList.contains('open')&&e.key==='Escape'){$('objectModal').classList.remove('open');return;}const tag=document.activeElement&&document.activeElement.tagName;if(tag==='INPUT'||tag==='TEXTAREA')return;if(e.key==='Delete'||e.key==='Backspace'){const p=panels[activePanel];if(p.selected){e.preventDefault();$('deleteBtn').click();}}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();$('undoBtn').click();}else if((e.ctrlKey||e.metaKey)&&(e.key.toLowerCase()==='y'||(e.shiftKey&&e.key.toLowerCase()==='z'))){e.preventDefault();$('redoBtn').click();}});
+  async function savePdf(key){const p=panels[key];if(!p.bytes||!window.PDFLib)return;const btn=$(key==='left'?'saveLeftBtn':'saveRightBtn');btn.disabled=true;const oldText=btn.textContent;btn.textContent='保存中…';status(`${key==='left'?'左':'右'}のPDFに注釈と編集データを保存しています…`);
+    try{
+      const pdf=await PDFLib.PDFDocument.load(p.bytes.slice());const pdfPages=pdf.getPages();
+      for(let pageNum=1;pageNum<=pdfPages.length;pageNum++){
+        const anns=p.annotations.get(pageNum)||[];if(!anns.length)continue;
+        const page=pdfPages[pageNum-1],pw=page.getWidth(),ph=page.getHeight(),scale=Math.min(2,4000/Math.max(pw,ph));
+        const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(pw*scale));canvas.height=Math.max(1,Math.round(ph*scale));const ctx=canvas.getContext('2d');ctx.clearRect(0,0,canvas.width,canvas.height);
+        for(const a of anns)drawAnnotation(ctx,a,canvas.width,canvas.height);
+        const data=canvas.toDataURL('image/png');const binary=atob(data.split(',')[1]);const pngBytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)pngBytes[i]=binary.charCodeAt(i);
+        const image=await pdf.embedPng(pngBytes);page.drawImage(image,{x:0,y:0,width:pw,height:ph});canvas.width=1;canvas.height=1;
+      }
+      // Attach a clean source PDF and the normalized editable objects. When this PDF is
+      // loaded back into PDF Pair Desk, it can restore the original page and each object.
+      const manifest={
+        format:PROJECT_FORMAT,
+        version:1,
+        sourceFilename:p.sourceFilename||p.filename||'document.pdf',
+        pageCount:pdfPages.length,
+        nextObjectNumber:p.nextObjectNumber,
+        savedAt:new Date().toISOString(),
+        annotations:Object.fromEntries([...p.annotations.entries()].map(([pageNum,items])=>[String(pageNum),cloneAnnotations(items)]))
+      };
+      await pdf.attach(p.bytes, SOURCE_PDF_ATTACHMENT, {
+        mimeType:'application/pdf',
+        description:'Original PDF used by PDF Pair Desk to restore individually editable annotations.'
+      });
+      await pdf.attach(new TextEncoder().encode(JSON.stringify(manifest)), EDITABLE_STATE_ATTACHMENT, {
+        mimeType:'application/json',
+        description:'PDF Pair Desk editable annotation objects. Reopen the containing PDF in PDF Pair Desk to continue editing.'
+      });
+      const out=await pdf.save();const blob=new Blob([out],{type:'application/pdf'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;const base=(p.sourceFilename||p.filename).replace(/\.pdf$/i,'')||'annotated';a.download=`${base}_annotated.pdf`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);status(`${p.filename} を編集データ付きPDFとして保存しました。後日このPDFを本アプリで開くと個別編集を再開できます。`);
+    }catch(err){console.error(err);status('PDFの保存に失敗しました。パスワード保護などの可能性があります。');alert('PDFの保存に失敗しました。ファイルがパスワード保護されていないか確認してください。');}
+    finally{btn.textContent=oldText;syncSaveButtons();}
+  }
+  $('saveLeftBtn').addEventListener('click',()=>savePdf('left'));$('saveRightBtn').addEventListener('click',()=>savePdf('right'));
+  function syncSaveButtons(){$('saveLeftBtn').disabled=!panels.left.bytes||panels.left.loading;$('saveRightBtn').disabled=!panels.right.bytes||panels.right.loading;syncImageButton();}
+  let resizeTimer=null;window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(async()=>{for(const key of keys){const p=panels[key];if(p.pdfDoc&&!p.loading){try{await buildPageViews(key);}catch(err){console.error(err);}}}},250);});
+  // ---- PDF画像化（旧 PdfToImg を内部機能として統合） ----
+  // 読み込み済みの panels[key].pdfDoc を再利用し、ファイルの再アップロードは不要。
+  const imgState = { key:'left', generation:0, pages:[], rendering:false, crop:{top:0,bottom:0,left:0,right:0} };
+  const imgStatus = (s) => { $('imgStatus').textContent = s; };
+  function syncImageButton(){ $('imageBtn').disabled = !(panels.left.pdfDoc || panels.right.pdfDoc); }
+  function imgBaseName(p){ return String((p && (p.sourceFilename || p.filename)) || 'document').replace(/\.pdf$/i,'') || 'document'; }
+  function loadImgElement(src){ return new Promise((resolve,reject)=>{ const i=new Image(); i.onload=()=>resolve(i); i.onerror=()=>reject(new Error('image load failed')); i.src=src; }); }
+  function openImageModal(){
+    const target = panels[activePanel].pdfDoc ? activePanel : (panels.left.pdfDoc ? 'left' : 'right');
+    $('imageModal').classList.add('open');
+    switchImageTarget(target);
+  }
+  function closeImageModal(){ imgState.generation++; imgState.rendering=false; $('imageModal').classList.remove('open'); }
+  function switchImageTarget(key){
+    imgState.key = key;
+    const gen = ++imgState.generation;
+    for (const k of keys) {
+      const btn = $(k==='left' ? 'imgPanelLeft' : 'imgPanelRight');
+      btn.classList.toggle('active', k===key);
+      btn.disabled = !panels[k].pdfDoc;
+    }
+    const p = panels[key];
+    $('imgTargetName').textContent = p.pdfDoc ? `対象PDF：${key==='left'?'左 A':'右 B'} ／ ${p.filename}（${p.pageCount}ページ）` : '対象PDF：未選択';
+    renderImagePages(gen);
+  }
+  async function buildImgDisplayUrl(rec){
+    const p = panels[imgState.key];
+    const anns = p.annotations.get(rec.pageNum) || [];
+    if (!$('imgAnnoChk').checked || !anns.length) return rec.cleanUrl;
+    const img = await loadImgElement(rec.cleanUrl);
+    const canvas = document.createElement('canvas');
+    canvas.width = rec.w; canvas.height = rec.h;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, rec.w, rec.h);
+    for (const a of anns) drawAnnotation(ctx, a, rec.w, rec.h);
+    return canvas.toDataURL('image/png');
+  }
+  async function renderImagePages(gen){
+    const p = panels[imgState.key];
+    const grid = $('imgGrid');
+    grid.replaceChildren();
+    imgState.pages = [];
+    updateImgSelCount();
+    if (!p.pdfDoc) { $('imgEmpty').hidden = false; $('imgEmpty').textContent = 'この側のPDFはまだ読み込まれていません。'; imgStatus('待機中'); $('imgProgress').value = 0; return; }
+    if (!window.pdfjsLib) { imgStatus('PDFライブラリの読み込みに失敗しました。'); return; }
+    $('imgEmpty').hidden = true;
+    const scale = Number($('imgScaleSel').value) || 4;
+    imgState.rendering = true; updateImgDownloadState();
+    imgStatus('ページを画像化しています…');
+    try{
+      for (let pageNum = 1; pageNum <= p.pageCount; pageNum++) {
+        if (gen !== imgState.generation) return;
+        const page = await p.pdfDoc.getPage(pageNum);
+        if (gen !== imgState.generation) return;
+        const viewport = page.getViewport({ scale });
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(viewport.width); canvas.height = Math.round(viewport.height);
+        const ctx = canvas.getContext('2d', { alpha:false });
+        await page.render({ canvasContext: ctx, viewport, background:'rgb(255,255,255)' }).promise;
+        if (gen !== imgState.generation) return;
+        const rec = { pageNum, cleanUrl: canvas.toDataURL('image/png'), w: canvas.width, h: canvas.height, displayUrl: null, selected: true, imgEl: null };
+        canvas.width = 1; canvas.height = 1;
+        rec.displayUrl = await buildImgDisplayUrl(rec);
+        if (gen !== imgState.generation) return;
+        const card = document.createElement('div'); card.className = 'img-card';
+        const head = document.createElement('div'); head.className = 'img-card-head';
+        const label = document.createElement('label');
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = true; cb.setAttribute('aria-label', `ページ ${pageNum} を保存`);
+        cb.addEventListener('change', () => { rec.selected = cb.checked; updateImgSelCount(); });
+        label.append(cb, document.createTextNode(`ページ ${pageNum} を保存`));
+        const size = document.createElement('span'); size.className = 'img-card-size'; size.textContent = `${rec.w} × ${rec.h} px`;
+        head.append(label, size);
+        const area = document.createElement('div'); area.className = 'imageArea';
+        const img = document.createElement('img'); img.src = rec.displayUrl; img.alt = `ページ ${pageNum} の画像`; rec.imgEl = img;
+        area.append(img);
+        for (const cls of ['maskTop','maskBottom','maskLeft','maskRight','lineTop','lineBottom','lineLeft','lineRight']) { const d = document.createElement('div'); d.className = cls; area.append(d); }
+        card.append(head, area);
+        grid.append(card);
+        imgState.pages.push(rec);
+        $('imgProgress').value = Math.round(pageNum / p.pageCount * 100);
+        imgStatus(`${pageNum} / ${p.pageCount} ページを画像化しました`);
+        updateImgMasks(); updateImgSelCount();
+      }
+      imgStatus('完了：保存するページとトリミングを確認してください。');
+    }catch(err){ console.error(err); if (gen === imgState.generation) imgStatus('ページの画像化に失敗しました。'); }
+    finally{ if (gen === imgState.generation) { imgState.rendering = false; updateImgDownloadState(); } }
+  }
+  async function refreshImgDisplayUrls(){
+    if (imgState.rendering || !imgState.pages.length) return;
+    const gen = imgState.generation;
+    imgStatus('注釈の反映を切り替えています…');
+    for (const rec of imgState.pages) {
+      if (gen !== imgState.generation) return;
+      rec.displayUrl = await buildImgDisplayUrl(rec);
+      if (rec.imgEl) rec.imgEl.src = rec.displayUrl;
+    }
+    imgStatus('完了：保存するページとトリミングを確認してください。');
+  }
+  function updateImgMasks(){
+    const { top, bottom, left, right } = imgState.crop;
+    $('imgGrid').querySelectorAll('.imageArea').forEach(area => {
+      area.querySelector('.maskTop').style.height = top + '%';
+      area.querySelector('.maskBottom').style.height = bottom + '%';
+      area.querySelector('.maskLeft').style.width = left + '%';
+      area.querySelector('.maskRight').style.width = right + '%';
+      area.querySelector('.lineTop').style.top = top + '%';
+      area.querySelector('.lineBottom').style.bottom = bottom + '%';
+      area.querySelector('.lineLeft').style.left = left + '%';
+      area.querySelector('.lineRight').style.right = right + '%';
+    });
+  }
+  function updateImgSelCount(){
+    const sel = imgState.pages.filter(r => r.selected).length;
+    $('imgSelCount').textContent = imgState.pages.length ? `（${sel} / ${imgState.pages.length} ページ選択中）` : '';
+    updateImgDownloadState();
+  }
+  function updateImgDownloadState(){ $('imgDownloadBtn').disabled = imgState.rendering || !imgState.pages.some(r => r.selected); }
+  function setAllImgSelected(selected){
+    for (const rec of imgState.pages) rec.selected = selected;
+    $('imgGrid').querySelectorAll('.img-card input[type="checkbox"]').forEach((cb, i) => { if (imgState.pages[i]) cb.checked = imgState.pages[i].selected; });
+    updateImgSelCount();
+  }
+  function cropImgDataUrl(url){
+    const { top, bottom, left, right } = imgState.crop;
+    return loadImgElement(url).then(img => {
+      const t = img.height * (top / 100), b = img.height * (bottom / 100);
+      const l = img.width * (left / 100), r = img.width * (right / 100);
+      const w = Math.max(1, Math.round(img.width - l - r)), h = Math.max(1, Math.round(img.height - t - b));
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, l, t, img.width - l - r, img.height - t - b, 0, 0, w, h);
+      return c.toDataURL('image/png');
+    });
+  }
+  $('imageBtn').addEventListener('click', openImageModal);
+  $('imgCloseBtn').addEventListener('click', closeImageModal);
+  $('imageModal').addEventListener('click', e => { if (e.target === $('imageModal')) closeImageModal(); });
+  $('imgPanelLeft').addEventListener('click', () => { if (panels.left.pdfDoc) switchImageTarget('left'); });
+  $('imgPanelRight').addEventListener('click', () => { if (panels.right.pdfDoc) switchImageTarget('right'); });
+  $('imgScaleSel').addEventListener('change', () => switchImageTarget(imgState.key));
+  $('imgAnnoChk').addEventListener('change', refreshImgDisplayUrls);
+  $('imgSelectAllBtn').addEventListener('click', () => setAllImgSelected(true));
+  $('imgClearAllBtn').addEventListener('click', () => setAllImgSelected(false));
+  for (const [id, side] of [['imgCropTop','top'],['imgCropBottom','bottom'],['imgCropLeft','left'],['imgCropRight','right']]) {
+    $(id).addEventListener('input', () => { imgState.crop[side] = Number($(id).value) || 0; $(id + 'Val').textContent = imgState.crop[side] + '%'; updateImgMasks(); });
+  }
+  $('imgDownloadBtn').addEventListener('click', async () => {
+    const selected = imgState.pages.filter(r => r.selected);
+    if (!selected.length) { imgStatus('保存するページを選択してください'); return; }
+    if (!window.JSZip) { imgStatus('ZIPライブラリの読み込みに失敗しました。ネット接続を確認して再読み込みしてください。'); return; }
+    const p = panels[imgState.key];
+    const base = imgBaseName(p);
+    const btn = $('imgDownloadBtn'); btn.disabled = true;
+    try{
+      imgStatus('ZIPを作成しています…');
+      const zip = new JSZip();
+      for (const rec of selected) {
+        const cropped = await cropImgDataUrl(rec.displayUrl);
+        zip.file(`${base}_page${rec.pageNum}.png`, cropped.split(',')[1], { base64:true });
+      }
+      const blob = await zip.generateAsync({ type:'blob' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `${base}_images.zip`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      imgStatus(`完了：${selected.length}ページを ${base}_images.zip に保存しました。`);
+    }catch(err){ console.error(err); imgStatus('ZIPの作成に失敗しました。'); }
+    finally{ updateImgDownloadState(); }
+  });
+
+  // Mark an initial working pane without requiring a PDF to be open.
+  selectPanel('left');syncSaveButtons();
+})();
+</script>
+</body>
+</html>
